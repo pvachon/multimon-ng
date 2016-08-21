@@ -29,6 +29,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 /* ---------------------------------------------------------------------- */
 
@@ -342,6 +343,43 @@ static int decode_fiw(struct Flex * flex) {
 	}
 }
 
+static inline
+void put_alnum_character(char ch)
+{
+    switch (ch) {
+    case '\n':
+        verbprintf(0, "\\n");
+        break;
+    case '\r':
+        verbprintf(0, "\\n");
+        break;
+    case '\"':
+        verbprintf(0, "\\\"");
+        break;
+    case '\\':
+        verbprintf(0, "\\\\");
+        break;
+    case '/':
+        verbprintf(0, "\\/");
+        break;
+    case '\b':
+        verbprintf(0, "<BKSP>");
+        break;
+    case '\f':
+        verbprintf(0, "<FF>");
+        break;
+    case '\t':
+        verbprintf(0, "\\t");
+        break;
+    default:
+        if (isprint(ch)) {
+            verbprintf(0, "%c", ch);
+        } else {
+            verbprintf(0, "\\u%04x", (unsigned)ch);
+        }
+    }
+}
+
 
 static void parse_alphanumeric(struct Flex * flex, unsigned int * phaseptr, char PhaseNo, int mw1, int mw2, int j) {
 	if (flex==NULL) return;
@@ -366,8 +404,13 @@ static void parse_alphanumeric(struct Flex * flex, unsigned int * phaseptr, char
 	time_t now=time(NULL);
 	struct tm * gmt=gmtime(&now);
 
+#if 0
 	verbprintf(0,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] ALN ", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
 			flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->FIW.cycleno, flex->FIW.frameno, flex->Decode.capcode);
+#endif
+    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"alphanumeric\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\",\"message\":\"",
+            gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
+            flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->Decode.capcode);
 
 	for (i = mw1; i <= mw2; i++) {
 		unsigned int dw =  phaseptr[i];
@@ -375,21 +418,24 @@ static void parse_alphanumeric(struct Flex * flex, unsigned int * phaseptr, char
 
 		if (i > mw1 || frag != 0x03) {
 			ch = dw & 0x7F;
-			if (ch != 0x03)
-				verbprintf(0, "%c", ch);
+			if (ch != 0x03) {
+                put_alnum_character(ch);
+            }
 		}
 
 		ch = (dw >> 7) & 0x7F;
-		if (ch != 0x03)	// Fill
-			verbprintf(0, "%c", ch);
+		if (ch != 0x03)	{ // Fill
+            put_alnum_character(ch);
+        }
 
 		ch = (dw >> 14) & 0x7F;
-		if (ch != 0x03)	// Fill
-			verbprintf(0, "%c", ch);
+		if (ch != 0x03)	{ // Fill
+            put_alnum_character(ch);
+        }
 	}
 
 
-	verbprintf(0, "\n");
+	verbprintf(0, "\"}\n");
 
 }
 
@@ -400,7 +446,10 @@ static void parse_numeric(struct Flex * flex, unsigned int * phaseptr, char Phas
 
 	time_t now=time(NULL);
 	struct tm * gmt=gmtime(&now);
-	verbprintf(0,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] NUM ", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
+    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"numeric\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\",\"message\":\"",
+            gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
+            flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->Decode.capcode);
+	verbprintf(3,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] NUM ", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
 			flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->FIW.cycleno, flex->FIW.frameno, flex->Decode.capcode);
 
 	// Get first dataword from message field or from second
@@ -440,7 +489,7 @@ static void parse_numeric(struct Flex * flex, unsigned int * phaseptr, char Phas
 		}
 		dw = phaseptr[i];
 	}
-	verbprintf(0, "\n");
+	verbprintf(0, "\"}\n");
 }
 
 
@@ -448,8 +497,12 @@ static void parse_tone_only(struct Flex * flex, char PhaseNo) {
 	if (flex==NULL) return;
 	time_t now=time(NULL);
 	struct tm * gmt=gmtime(&now);
-	verbprintf(0,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] TON\n", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
+    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"tone\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\"}\n",
+            gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
+            flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->Decode.capcode);
+	verbprintf(3,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] TON\n", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
 			flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->FIW.cycleno, flex->FIW.frameno, flex->Decode.capcode);
+
 }
 
 
@@ -457,14 +510,16 @@ static void parse_unknown(struct Flex * flex, unsigned int * phaseptr, char Phas
 	if (flex==NULL) return;
 	time_t now=time(NULL);
 	struct tm * gmt=gmtime(&now);
-	verbprintf(0,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] UNK", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
+    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"unknown\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\",\"message\":\"",
+            gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
+            flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->Decode.capcode);
+	verbprintf(3,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] UNK", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
 			flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->FIW.cycleno, flex->FIW.frameno, flex->Decode.capcode);
-
 	int i;
 	for (i = mw1; i <= mw2; i++) {
 		verbprintf(0, " %08x", phaseptr[i]);
 	}
-	verbprintf(0, "\n");
+	verbprintf(0, "\"}\n");
 }
 
 
