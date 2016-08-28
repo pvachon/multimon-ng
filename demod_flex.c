@@ -458,7 +458,7 @@ static void parse_numeric(struct Flex * flex, unsigned int * phaseptr, char Phas
 
 	time_t now=time(NULL);
 	struct tm * gmt=gmtime(&now);
-    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"numeric\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\",\"message\":\"",
+    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"numeric\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i UTC\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\",\"message\":\"",
             gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
             flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->Decode.capcode);
 	verbprintf(3,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] NUM ", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
@@ -509,7 +509,7 @@ static void parse_tone_only(struct Flex * flex, char PhaseNo) {
 	if (flex==NULL) return;
 	time_t now=time(NULL);
 	struct tm * gmt=gmtime(&now);
-    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"tone\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\"}\n",
+    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"tone\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i UTC\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\"}\n",
             gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
             flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->Decode.capcode);
 	verbprintf(3,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] TON\n", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
@@ -522,7 +522,7 @@ static void parse_unknown(struct Flex * flex, unsigned int * phaseptr, char Phas
 	if (flex==NULL) return;
 	time_t now=time(NULL);
 	struct tm * gmt=gmtime(&now);
-    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"unknown\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\",\"message\":\"",
+    verbprintf(0, "{\"proto\":\"flex\",\"type\":\"unknown\",\"timestamp\":\"%04i-%02i-%02i %02i:%02i:%02i UTC\",\"baud\":%i,\"syncLevel\":%i,\"phaseNo\":\"%c\",\"capCode\":\"%09li\",\"message\":\"",
             gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
             flex->Sync.baud, flex->Sync.levels, PhaseNo, flex->Decode.capcode);
 	verbprintf(3,  "FLEX: %04i-%02i-%02i %02i:%02i:%02i %i/%i/%c %02i.%03i [%09li] UNK", gmt->tm_year+1900, gmt->tm_mon+1, gmt->tm_mday, gmt->tm_hour, gmt->tm_min, gmt->tm_sec,
